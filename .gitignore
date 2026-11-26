@@ -1,0 +1,7 @@
+# 演示截图等临时文件，不随原型一起部署
+image.png
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp

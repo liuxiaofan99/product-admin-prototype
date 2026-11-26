@@ -51,8 +51,9 @@
   .main{flex:1;margin-left:224px;display:flex;flex-direction:column;min-width:0}
 
   /* Sidebar */
-  .brand{display:flex;align-items:center;gap:10px;padding:20px 20px 16px}
-  .brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:18px}
+  .brand{display:flex;align-items:center;gap:10px;padding:20px 20px 16px;cursor:pointer}
+  .brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:18px;transition:transform .15s}
+  .brand:hover .logo{transform:scale(1.1)}
   .brand .name{font-size:16px;font-weight:600;color:#fff;letter-spacing:.5px}
   .brand .sub{font-size:11px;color:#8B90AC;margin-top:1px}
   .nav{padding:6px 12px;flex:1;overflow-y:auto}
@@ -303,7 +304,7 @@
 <div class="layout">
   <!-- ===== Sidebar ===== -->
   <aside class="sidebar">
-    <div class="brand">
+    <div class="brand" onclick="go('dashboard')" title="返回数据总览">
       <div class="logo">☁️</div>
       <div>
         <div class="name">云仓商城</div>
