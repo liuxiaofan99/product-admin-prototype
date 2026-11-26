@@ -216,6 +216,21 @@
   .img-opt:hover{border-color:var(--primary)}
   .img-opt.selected{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
   .img-preview{width:96px;height:96px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:44px;margin-right:16px;flex-shrink:0}
+  /* 图片上传 */
+  .upload-zone{border:2px dashed var(--border-strong);border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer;transition:.15s;background:#FAFBFE}
+  .upload-zone:hover,.upload-zone.drag{border-color:var(--primary);background:var(--primary-soft)}
+  .upload-zone .up-ico{font-size:30px;margin-bottom:8px}
+  .upload-zone .up-title{font-size:14px;font-weight:500}
+  .upload-zone .up-sub{font-size:12px;color:var(--text-3);margin-top:4px}
+  .upload-previews{display:none;flex-wrap:wrap;gap:12px;margin-top:14px}
+  .upload-previews.show{display:flex}
+  .up-item{position:relative;width:88px;height:88px;border-radius:10px;overflow:hidden;border:2px solid var(--border);cursor:zoom-in;background:#EFF1F5}
+  .up-item.main{border-color:var(--primary)}
+  .up-item img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+  .up-badge{position:absolute;left:0;top:0;background:var(--primary);color:#fff;font-size:10px;padding:2px 6px;border-bottom-right-radius:8px}
+  .up-remove{position:absolute;right:4px;top:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;border:none;font-size:13px;line-height:1;cursor:pointer}
+  .up-remove:hover{background:var(--red)}
+  .thumb-img{width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;display:block;background:#EFF1F5}
 
   /* specs */
   .spec-row{display:flex;gap:10px;align-items:center;margin-bottom:10px}
@@ -291,6 +306,24 @@
   .detail-kv dd{color:var(--text);font-weight:500}
 
   .stat-badge{display:inline-flex;align-items:center;gap:6px;background:var(--primary-soft);color:var(--primary);padding:5px 12px;border-radius:8px;font-size:13px;font-weight:500}
+
+  /* 缩略图点击放大 */
+  .thumb.clickable,.thumb-img.clickable{cursor:zoom-in}
+  .thumb.clickable:hover,.thumb-img.clickable:hover{outline:2px solid var(--primary-soft);outline-offset:-2px}
+  /* 图片放大预览 lightbox */
+  .overlay.dark{background:rgba(8,10,18,.82)}
+  .lightbox-box{position:relative;display:flex;flex-direction:column;align-items:center;max-width:92vw}
+  .lb-main{width:520px;height:520px;border-radius:14px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fff}
+  .lb-main img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+  .lb-main .lb-emoji{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:160px}
+  .lb-close{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.45);color:#fff;border:none;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;line-height:1;z-index:2}
+  .lb-close:hover{background:var(--red)}
+  .lb-caption{color:#fff;margin-top:14px;font-size:14px;text-align:center;max-width:560px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lb-nav{display:flex;align-items:center;gap:16px;margin-top:10px}
+  .lb-arrow{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.25);font-size:20px;cursor:pointer}
+  .lb-arrow:hover{background:rgba(255,255,255,.3)}
+  .lb-arrow[disabled]{opacity:.25;cursor:not-allowed}
+  .lb-count{color:#fff;font-size:13px;min-width:48px;text-align:center}
 
   @media(max-width:1024px){
     .kpi-grid{grid-template-columns:repeat(2,1fr)}
@@ -453,8 +486,16 @@
           </div>
 
           <div class="form-section">
-            <div class="fs-title">商品主图</div>
-            <div class="fs-desc">选择一个占位图标作为商品主图（原型演示用）</div>
+            <div class="fs-title">商品图片</div>
+            <div class="fs-desc">支持多图上传，第一张作为主图；点击或拖拽图片到下方区域</div>
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+              <div class="up-ico">📷</div>
+              <div class="up-title">点击上传 或 拖拽图片到此处</div>
+              <div class="up-sub">支持 JPG / PNG，最多 5 张，第一张为主图</div>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" multiple hidden onchange="handleUpload(this.files)">
+            <div class="upload-previews" id="uploadPreviews"></div>
+            <div class="fs-desc" style="margin:16px 0 8px">或选择图标占位（未上传图片时使用）：</div>
             <div class="img-pick" id="imgPick"></div>
           </div>
 
@@ -666,6 +707,20 @@
     <div class="m-foot">
       <button class="btn btn-ghost" onclick="closeModal('confirmModal')">取消</button>
       <button class="btn btn-danger-solid" id="confirmOk">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Lightbox 图片放大预览 ===== -->
+<div class="overlay dark" id="lightbox">
+  <div class="lightbox-box">
+    <button class="lb-close" onclick="closeModal('lightbox')">×</button>
+    <div class="lb-main" id="lbMain"></div>
+    <div class="lb-caption" id="lbCaption"></div>
+    <div class="lb-nav" id="lbNav">
+      <button class="lb-arrow" id="lbPrev" onclick="lbNav(-1)">‹</button>
+      <span class="lb-count" id="lbCount"></span>
+      <button class="lb-arrow" id="lbNext" onclick="lbNav(1)">›</button>
     </div>
   </div>
 </div>
@@ -942,7 +997,7 @@ function renderProducts(){
     const stockCls = stock===0?'zero-stock':(stock<=p.warnStock?'low-stock':'');
     return `<tr>
       <td><input type="checkbox" class="chk row-chk" data-id="${p.id}" ${checked} onchange="toggleRow(${p.id},this.checked)"></td>
-      <td><div class="prod-cell"><div class="thumb" style="background:${p.color}">${p.emoji}</div><div><div class="p-name">${esc(p.name)}</div><div class="p-code">${esc(p.code)}</div></div></div></td>
+      <td><div class="prod-cell">${thumbHTML(p)}<div><div class="p-name">${esc(p.name)}</div><div class="p-code">${esc(p.code)}</div></div></div></td>
       <td>${esc(catPath(p.catId))}</td>
       <td class="money">${priceText(p)}</td>
       <td class="num ${stockCls}">${stock}</td>
@@ -1020,6 +1075,8 @@ let editingId = null;
 let formImg = { emoji:'📱', color:'#EEF2FF' };
 let formSpecs = []; // [{name, values:[...]}]
 let seedSkus = null; // 编辑多规格商品时，用于预填 SKU
+let formImages = []; // 已上传的商品图片（objectURL 数组）
+const MAX_IMAGES = 5;
 
 function openForm(id){
   editingId = id || null;
@@ -1042,6 +1099,11 @@ function openForm(id){
   document.getElementById('imgPick').innerHTML = EMOJIS.map((e,i)=>`<div class="img-opt" data-e="${e}" data-c="${EMOJI_COLORS[i%EMOJI_COLORS.length]}" onclick="pickImg(this)">${e}</div>`).join('');
   const selImg = document.querySelector(`.img-opt[data-e="${formImg.emoji}"]`);
   if(selImg) selImg.classList.add('selected');
+
+  // 图片上传：新增时清空，编辑时回填已上传图片
+  formImages = [];
+  if(id){ const pp = products.find(x=>x.id===id); if(pp && pp.images) formImages = [...pp.images]; }
+  renderUploadPreviews();
 
   if(id){
     const p = products.find(x=>x.id===id);
@@ -1095,6 +1157,84 @@ function pickImg(el){
   el.classList.add('selected');
   formImg = { emoji:el.dataset.e, color:el.dataset.c };
 }
+
+/* 商品缩略图：优先展示上传的首图，否则用 emoji 占位；点击放大预览 */
+function thumbHTML(p){
+  const pid = (p && p.id) ? p.id : '';
+  const oc = pid ? `onclick="openLightbox(${pid})" title="点击放大预览"` : '';
+  if(p && p.images && p.images.length) return `<img class="thumb-img clickable" ${oc} src="${p.images[0]}" alt="">`;
+  return `<div class="thumb clickable" ${oc} style="background:${(p&&p.color)?p.color:'#EFF1F5'}">${(p&&p.emoji)?p.emoji:'📦'}</div>`;
+}
+
+/* 图片放大预览（lightbox） */
+let lbImages = [], lbIndex = 0;
+function showLightbox(items, caption, start){
+  lbImages = items;
+  lbIndex = start || 0;
+  document.getElementById('lbCaption').textContent = caption || '';
+  renderLightbox();
+  openModal('lightbox');
+}
+function openLightbox(pid){
+  const p = products.find(x=>x.id===pid);
+  if(!p) return;
+  const items = (p.images && p.images.length) ? p.images.map(src=>({type:'img', src})) : [{type:'emoji', emoji:p.emoji, color:p.color}];
+  showLightbox(items, p.name, 0);
+}
+function renderLightbox(){
+  const cur = lbImages[lbIndex];
+  const main = document.getElementById('lbMain');
+  if(cur.type === 'img'){
+    main.innerHTML = `<img src="${cur.src}" alt="">`;
+  } else {
+    main.innerHTML = `<div class="lb-emoji" style="background:${cur.color}">${cur.emoji}</div>`;
+  }
+  document.getElementById('lbCount').textContent = (lbIndex+1)+' / '+lbImages.length;
+  document.getElementById('lbPrev').disabled = lbIndex===0;
+  document.getElementById('lbNext').disabled = lbIndex>=lbImages.length-1;
+  document.getElementById('lbNav').style.display = lbImages.length>1 ? 'flex' : 'none';
+}
+function lbNav(d){
+  lbIndex = Math.max(0, Math.min(lbImages.length-1, lbIndex+d));
+  renderLightbox();
+}
+
+/* 图片上传：多图 + 预览 + 删除 */
+function handleUpload(files){
+  for(const f of files){
+    if(!f.type.startsWith('image/')) continue;
+    if(formImages.length >= MAX_IMAGES){ toast(`最多上传 ${MAX_IMAGES} 张图片`,'warn'); break; }
+    formImages.push(URL.createObjectURL(f));
+  }
+  renderUploadPreviews();
+}
+function renderUploadPreviews(){
+  const box = document.getElementById('uploadPreviews');
+  if(formImages.length){
+    box.className = 'upload-previews show';
+    box.innerHTML = formImages.map((url,i)=>`
+      <div class="up-item ${i===0?'main':''}" onclick="openUploadLightbox(${i})" title="点击放大查看">
+        <img src="${url}" alt="">
+        ${i===0?'<span class="up-badge">主图</span>':''}
+        <button type="button" class="up-remove" onclick="event.stopPropagation();removeImage(${i})" title="移除">×</button>
+      </div>`).join('');
+  } else {
+    box.className = 'upload-previews';
+    box.innerHTML = '';
+  }
+}
+function openUploadLightbox(i){
+  showLightbox(formImages.map(src=>({type:'img', src})), '已上传图片', i);
+}
+function removeImage(i){ formImages.splice(i,1); renderUploadPreviews(); }
+
+/* 拖拽上传支持 */
+(function(){
+  const zone = document.getElementById('uploadZone');
+  zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.classList.add('drag'); });
+  zone.addEventListener('dragleave', ()=> zone.classList.remove('drag'));
+  zone.addEventListener('drop', e=>{ e.preventDefault(); zone.classList.remove('drag'); if(e.dataTransfer.files.length) handleUpload(e.dataTransfer.files); });
+})();
 
 function addSpecRow(){
   formSpecs.push({ name:'', values:[] });
@@ -1180,6 +1320,7 @@ function saveProduct(){
     brand: document.getElementById('inpBrand').value.trim(),
     desc: document.getElementById('inpDesc').value.trim(),
     emoji: formImg.emoji, color: formImg.color,
+    images: formImages,
     cost: +document.getElementById('inpCost').value || 0,
     warnStock: +document.getElementById('inpWarn').value || 0,
     skus,
@@ -1240,6 +1381,7 @@ function randomGenerate(){
   document.getElementById('inpWarn').value = warn;
 
   formImg = { emoji: pool.emoji, color };
+  formImages = []; renderUploadPreviews();
   document.querySelectorAll('.img-opt').forEach(o=>o.classList.toggle('selected', o.dataset.e===pool.emoji));
 
   // 约 6 成概率生成多规格（颜色，或颜色×尺码），演示 SKU 自动生成
@@ -1275,7 +1417,7 @@ function renderInventory(){
     const kind = s===0?'zero':(s<=p.warnStock?'low':'ok');
     const tag = kind==='ok' ? '<span class="tag green"><span class="dot"></span>充足</span>' : kind==='low' ? '<span class="tag orange"><span class="dot"></span>预警</span>' : '<span class="tag red"><span class="dot"></span>售罄</span>';
     return `<tr>
-      <td><div class="prod-cell"><div class="thumb" style="background:${p.color}">${p.emoji}</div><div><div class="p-name">${esc(p.name)}</div><div class="p-code">${esc(p.code)}</div></div></div></td>
+      <td><div class="prod-cell">${thumbHTML(p)}<div><div class="p-name">${esc(p.name)}</div><div class="p-code">${esc(p.code)}</div></div></div></td>
       <td>${p.skus.length} 个 SKU</td>
       <td class="num ${kind==='low'?'low-stock':kind==='zero'?'zero-stock':''}">${s}</td>
       <td class="num">${p.warnStock}</td>
@@ -1303,7 +1445,7 @@ function renderStockLogs(){
     const pn = p?p.name:'（已删除商品）';
     return `<tr>
       <td style="color:var(--text-2)">${l.time}</td>
-      <td><div class="prod-cell"><div class="thumb" style="background:${p?p.color:'#EFF1F5'}">${p?p.emoji:'📦'}</div><div><div class="p-name">${esc(pn)}</div><div class="p-code">${p?esc(p.code):''}</div></div></div></td>
+      <td><div class="prod-cell">${thumbHTML(p)}<div><div class="p-name">${esc(pn)}</div><div class="p-code">${p?esc(p.code):''}</div></div></div></td>
       <td>${esc(l.skuSpec)}</td>
       <td>${l.type==='in'?'<span class="tag green"><span class="dot"></span>入库</span>':'<span class="tag orange"><span class="dot"></span>出库</span>'}</td>
       <td class="num ${l.type==='in'?'':'low-stock'}">${l.type==='in'?'+':'-'}${l.qty}</td>
