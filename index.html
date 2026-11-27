@@ -185,6 +185,9 @@
   .pager button:hover{border-color:var(--primary);color:var(--primary)}
   .pager button.active{background:var(--primary);border-color:var(--primary);color:#fff}
   .pager button[disabled]{opacity:.4;cursor:not-allowed}
+  .page-right{display:flex;align-items:center;gap:14px}
+  .size-sel{display:flex;align-items:center;gap:6px;color:var(--text-2);font-size:12px;white-space:nowrap}
+  .size-sel .select{padding:5px 8px;border-radius:7px;font-size:12px}
 
   /* ===== Empty ===== */
   .empty{text-align:center;padding:56px 20px;color:var(--text-3)}
@@ -224,9 +227,9 @@
   .upload-zone .up-sub{font-size:12px;color:var(--text-3);margin-top:4px}
   .upload-previews{display:none;flex-wrap:wrap;gap:12px;margin-top:14px}
   .upload-previews.show{display:flex}
-  .up-item{position:relative;width:88px;height:88px;border-radius:10px;overflow:hidden;border:2px solid var(--border);cursor:zoom-in;background:#EFF1F5}
-  .up-item.main{border-color:var(--primary)}
-  .up-item img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+  .up-item{position:relative;width:88px;height:88px;flex:0 0 auto;border-radius:10px;overflow:hidden;border:2px solid var(--border);cursor:zoom-in;background:#EFF1F5;display:flex;align-items:center;justify-content:center}
+  .up-item.is-main{border-color:var(--primary)}
+  .up-item img{width:100%;height:100%;object-fit:cover;display:block}
   .up-badge{position:absolute;left:0;top:0;background:var(--primary);color:#fff;font-size:10px;padding:2px 6px;border-bottom-right-radius:8px}
   .up-remove{position:absolute;right:4px;top:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;border:none;font-size:13px;line-height:1;cursor:pointer}
   .up-remove:hover{background:var(--red)}
@@ -314,7 +317,7 @@
   .overlay.dark{background:rgba(8,10,18,.82)}
   .lightbox-box{position:relative;display:flex;flex-direction:column;align-items:center;max-width:92vw}
   .lb-main{width:520px;height:520px;border-radius:14px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fff}
-  .lb-main img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+  .lb-main img{width:100%;height:100%;object-fit:cover;display:block}
   .lb-main .lb-emoji{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:160px}
   .lb-close{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.45);color:#fff;border:none;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;line-height:1;z-index:2}
   .lb-close:hover{background:var(--red)}
@@ -445,7 +448,10 @@
           </div>
           <div class="pagination">
             <span class="info" id="pageInfo"></span>
-            <div class="pager" id="pager"></div>
+            <div class="page-right">
+              <span id="listSizeBox"></span>
+              <div class="pager" id="pager"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -561,8 +567,8 @@
         <div class="card">
           <div style="padding:16px 20px 0">
             <div class="toolbar">
-              <div class="search"><span class="s-ico">🔍</span><input id="invSearch" placeholder="搜索商品" oninput="renderInventory()"></div>
-              <select class="select" id="invStatus" onchange="renderInventory()">
+              <div class="search"><span class="s-ico">🔍</span><input id="invSearch" placeholder="搜索商品" oninput="filterInventory()"></div>
+              <select class="select" id="invStatus" onchange="filterInventory()">
                 <option value="">全部库存状态</option>
                 <option value="ok">库存充足</option>
                 <option value="low">库存预警</option>
@@ -577,6 +583,13 @@
             </table>
             <div id="invEmpty" class="empty" style="display:none"><div class="e-ico">📭</div><div class="e-title">暂无匹配库存记录</div></div>
           </div>
+          <div class="pagination">
+            <span class="info" id="invPageInfo"></span>
+            <div class="page-right">
+              <span id="invSizeBox"></span>
+              <div class="pager" id="invPager"></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -584,19 +597,16 @@
       <section class="view" id="view-stockLogs">
         <div class="page-head">
           <div><h1>库存流水</h1><div class="desc">记录每一次入库与出库操作，可追溯</div></div>
-          <button class="btn btn-primary btn-lg" onclick="openStockModal()">＋ 入库 / 出库</button>
         </div>
         <div class="card">
           <div style="padding:16px 20px 0">
             <div class="toolbar">
-              <div class="search"><span class="s-ico">🔍</span><input id="logSearch" placeholder="搜索商品 / 规格" oninput="renderStockLogs()"></div>
-              <select class="select" id="logType" onchange="renderStockLogs()">
+              <div class="search"><span class="s-ico">🔍</span><input id="logSearch" placeholder="搜索商品 / 规格" oninput="filterStockLogs()"></div>
+              <select class="select" id="logType" onchange="filterStockLogs()">
                 <option value="">全部类型</option>
                 <option value="in">入库</option>
                 <option value="out">出库</option>
               </select>
-              <span class="spacer"></span>
-              <span class="stat-badge">共 <b id="logTotal">0</b> 条流水</span>
             </div>
           </div>
           <div class="table-wrap" style="margin-top:8px">
@@ -605,6 +615,13 @@
               <tbody id="logRows"></tbody>
             </table>
             <div id="logEmpty" class="empty" style="display:none"><div class="e-ico">🧾</div><div class="e-title">暂无库存流水</div><div class="e-desc">入库 / 出库操作后，流水会显示在这里</div></div>
+          </div>
+          <div class="pagination">
+            <span class="info" id="logPageInfo"></span>
+            <div class="page-right">
+              <span id="logSizeBox"></span>
+              <div class="pager" id="logPager"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -782,14 +799,30 @@ let products = [
 ];
 
 let stockLogs = [
-  { id:1, prodId:1, skuSpec:'默认', type:'in',  qty:50,  time:'2026-11-21 14:20', op:'采购小张', note:'补货入库' },
-  { id:2, prodId:4, skuSpec:'默认', type:'in',  qty:20,  time:'2026-11-20 10:05', op:'采购小张', note:'补货入库' },
-  { id:3, prodId:7, skuSpec:'白色 / M', type:'out', qty:15, time:'2026-11-19 18:40', op:'仓管老李', note:'订单发货' },
-  { id:4, prodId:10, skuSpec:'默认', type:'out', qty:200, time:'2026-11-18 16:12', op:'仓管老李', note:'大促出库' },
-  { id:5, prodId:11, skuSpec:'默认', type:'in',  qty:24,  time:'2026-11-17 09:30', op:'采购小张', note:'新品到货' },
-  { id:6, prodId:16, skuSpec:'默认', type:'in',  qty:30,  time:'2026-11-16 11:00', op:'采购小张', note:'补货入库' },
-  { id:7, prodId:16, skuSpec:'默认', type:'out', qty:25, time:'2026-11-15 20:15', op:'仓管老李', note:'订单发货' },
-  { id:8, prodId:3, skuSpec:'默认', type:'out', qty:5,   time:'2026-11-14 15:45', op:'仓管老李', note:'门店调拨' },
+  { id:1,  prodId:1,  skuSpec:'默认', type:'in',  qty:50,  time:'2026-11-21 14:20', op:'采购小张', note:'补货入库' },
+  { id:9,  prodId:9,  skuSpec:'默认', type:'in',  qty:40,  time:'2026-11-21 09:10', op:'采购小张', note:'补货入库' },
+  { id:10, prodId:6,  skuSpec:'黑色 / M', type:'out', qty:12, time:'2026-11-20 16:30', op:'仓管老李', note:'订单发货' },
+  { id:2,  prodId:4,  skuSpec:'默认', type:'in',  qty:20,  time:'2026-11-20 10:05', op:'采购小张', note:'补货入库' },
+  { id:3,  prodId:7,  skuSpec:'白色 / M', type:'out', qty:15, time:'2026-11-19 18:40', op:'仓管老李', note:'订单发货' },
+  { id:11, prodId:12, skuSpec:'默认', type:'in',  qty:12,  time:'2026-11-19 11:20', op:'采购小张', note:'新品到货' },
+  { id:4,  prodId:10, skuSpec:'默认', type:'out', qty:200, time:'2026-11-18 16:12', op:'仓管老李', note:'大促出库' },
+  { id:12, prodId:8,  skuSpec:'默认', type:'out', qty:60,  time:'2026-11-18 10:25', op:'仓管小王', note:'订单发货' },
+  { id:13, prodId:2,  skuSpec:'默认', type:'out', qty:30,  time:'2026-11-17 14:50', op:'仓管老李', note:'订单发货' },
+  { id:5,  prodId:11, skuSpec:'默认', type:'in',  qty:24,  time:'2026-11-17 09:30', op:'采购小张', note:'新品到货' },
+  { id:14, prodId:15, skuSpec:'默认', type:'in',  qty:100, time:'2026-11-16 15:30', op:'采购小张', note:'补货入库' },
+  { id:6,  prodId:16, skuSpec:'默认', type:'in',  qty:30,  time:'2026-11-16 11:00', op:'采购小张', note:'补货入库' },
+  { id:7,  prodId:16, skuSpec:'默认', type:'out', qty:25,  time:'2026-11-15 20:15', op:'仓管老李', note:'订单发货' },
+  { id:15, prodId:5,  skuSpec:'默认', type:'in',  qty:200, time:'2026-11-15 09:40', op:'采购小张', note:'补货入库' },
+  { id:8,  prodId:3,  skuSpec:'默认', type:'out', qty:5,   time:'2026-11-14 15:45', op:'仓管老李', note:'门店调拨' },
+  { id:16, prodId:18, skuSpec:'默认', type:'in',  qty:80,  time:'2026-11-13 16:20', op:'采购小张', note:'新品到货' },
+  { id:17, prodId:13, skuSpec:'默认', type:'out', qty:8,   time:'2026-11-12 11:15', op:'仓管小王', note:'门店调拨' },
+  { id:18, prodId:17, skuSpec:'默认', type:'in',  qty:150, time:'2026-11-11 10:30', op:'采购小张', note:'补货入库' },
+  { id:19, prodId:14, skuSpec:'默认', type:'out', qty:35,  time:'2026-11-09 17:05', op:'仓管老李', note:'订单发货' },
+  { id:20, prodId:10, skuSpec:'默认', type:'in',  qty:300, time:'2026-11-08 09:50', op:'采购小张', note:'大促备货' },
+  { id:21, prodId:7,  skuSpec:'黑色 / M', type:'out', qty:40, time:'2026-11-06 14:25', op:'仓管小王', note:'订单发货' },
+  { id:22, prodId:1,  skuSpec:'默认', type:'out', qty:25,  time:'2026-11-05 11:40', op:'仓管老李', note:'订单发货' },
+  { id:23, prodId:6,  skuSpec:'藏青 / L', type:'out', qty:18, time:'2026-11-03 16:00', op:'仓管小王', note:'门店调拨' },
+  { id:24, prodId:3,  skuSpec:'默认', type:'in',  qty:25,  time:'2026-11-01 10:20', op:'采购小张', note:'补货入库' },
 ];
 
 /* ============================= 状态 & 工具 ============================= */
@@ -883,6 +916,7 @@ function gotoInventory(opt){
   opt = opt || {};
   document.getElementById('invSearch').value = opt.search || '';
   document.getElementById('invStatus').value = opt.status || '';
+  invState.page=1;
   go('inventory');
 }
 
@@ -944,7 +978,7 @@ function logRowHTML(l){
 }
 
 /* ============================= 商品列表 ============================= */
-const listState = { page:1, pageSize:8, search:'', cat:'', status:'', selected:new Set() };
+const listState = { page:1, pageSize:10, search:'', cat:'', status:'', selected:new Set() };
 function filterProducts(){ listState.search = document.getElementById('fSearch').value.trim().toLowerCase(); listState.cat = document.getElementById('fCategory').value; listState.status = document.getElementById('fStatus').value; listState.page=1; renderProducts(); }
 function resetFilters(){ document.getElementById('fSearch').value=''; document.getElementById('fCategory').value=''; document.getElementById('fStatus').value=''; filterProducts(); }
 
@@ -1013,19 +1047,33 @@ function renderProducts(){
 
   document.getElementById('listEmpty').style.display = total===0?'block':'none';
   document.getElementById('pageInfo').textContent = `共 ${total} 个商品，第 ${listState.page}/${pages} 页`;
-  renderPager(pages);
+  renderPager('pager', pages, listState.page, 'goPage');
   renderBatchBar();
   document.getElementById('chkAll').checked = list.size>0 && list.every(p=>listState.selected.has(p.id));
 }
 
-function renderPager(pages){
-  const el = document.getElementById('pager');
-  let html = `<button onclick="goPage(${listState.page-1})" ${listState.page<=1?'disabled':''}>‹</button>`;
-  for(let i=1;i<=pages;i++) html += `<button class="${i===listState.page?'active':''}" onclick="goPage(${i})">${i}</button>`;
-  html += `<button onclick="goPage(${listState.page+1})" ${listState.page>=pages?'disabled':''}>›</button>`;
+function renderPager(elId, pages, cur, goFn){
+  const el = document.getElementById(elId);
+  let html = `<button onclick="${goFn}(${cur-1})" ${cur<=1?'disabled':''}>‹</button>`;
+  for(let i=1;i<=pages;i++) html += `<button class="${i===cur?'active':''}" onclick="${goFn}(${i})">${i}</button>`;
+  html += `<button onclick="${goFn}(${cur+1})" ${cur>=pages?'disabled':''}>›</button>`;
   el.innerHTML = html;
 }
 function goPage(p){ listState.page=p; renderProducts(); }
+
+/* 每页条数选择（三个列表共用） */
+const PAGE_SIZES = [10,20,50,100];
+function sizeSelHTML(id, cur){
+  return `<label class="size-sel">每页
+    <select class="select" id="${id}" onchange="setPageSize('${id}',+this.value)">
+      ${PAGE_SIZES.map(n=>`<option value="${n}" ${n===cur?'selected':''}>${n}</option>`).join('')}
+    </select>条</label>`;
+}
+function setPageSize(id, n){
+  if(id==='listSize'){ listState.pageSize=n; listState.page=1; renderProducts(); }
+  else if(id==='invSize'){ invState.pageSize=n; invState.page=1; renderInventory(); }
+  else if(id==='logSize'){ logState.pageSize=n; logState.page=1; renderStockLogs(); }
+}
 
 function renderBatchBar(){
   const n = listState.selected.size;
@@ -1213,7 +1261,7 @@ function renderUploadPreviews(){
   if(formImages.length){
     box.className = 'upload-previews show';
     box.innerHTML = formImages.map((url,i)=>`
-      <div class="up-item ${i===0?'main':''}" onclick="openUploadLightbox(${i})" title="点击放大查看">
+      <div class="up-item ${i===0?'is-main':''}" onclick="openUploadLightbox(${i})" title="点击放大查看">
         <img src="${url}" alt="">
         ${i===0?'<span class="up-badge">主图</span>':''}
         <button type="button" class="up-remove" onclick="event.stopPropagation();removeImage(${i})" title="移除">×</button>
@@ -1399,6 +1447,7 @@ function randomGenerate(){
 }
 
 /* ============================= 库存管理 ============================= */
+const invState = { page:1, pageSize:10 };
 function invFiltered(){
   const kw = document.getElementById('invSearch').value.trim().toLowerCase();
   const st = document.getElementById('invStatus').value;
@@ -1410,9 +1459,15 @@ function invFiltered(){
     return true;
   });
 }
+function filterInventory(){ invState.page=1; renderInventory(); }
 function renderInventory(){
   const list = invFiltered();
-  document.getElementById('invRows').innerHTML = list.map(p=>{
+  const total = list.length;
+  const pages = Math.max(1, Math.ceil(total/invState.pageSize));
+  if(invState.page>pages) invState.page=pages;
+  const start = (invState.page-1)*invState.pageSize;
+  const pageItems = list.slice(start, start+invState.pageSize);
+  document.getElementById('invRows').innerHTML = pageItems.map(p=>{
     const s = totalStock(p);
     const kind = s===0?'zero':(s<=p.warnStock?'low':'ok');
     const tag = kind==='ok' ? '<span class="tag green"><span class="dot"></span>充足</span>' : kind==='low' ? '<span class="tag orange"><span class="dot"></span>预警</span>' : '<span class="tag red"><span class="dot"></span>售罄</span>';
@@ -1425,10 +1480,15 @@ function renderInventory(){
       <td><div class="td-actions"><span class="link" onclick="openStockModal(${p.id})">入库</span><span class="link" onclick="openStockModal(${p.id},'out')">出库</span></div></td>
     </tr>`;
   }).join('');
-  document.getElementById('invEmpty').style.display = list.length? 'none':'block';
+  document.getElementById('invEmpty').style.display = total? 'none':'block';
+  document.getElementById('invPageInfo').textContent = `共 ${total} 个商品，第 ${invState.page}/${pages} 页`;
+  renderPager('invPager', pages, invState.page, 'goInvPage');
 }
+function goInvPage(p){ invState.page=p; renderInventory(); }
 
 /* 库存流水独立页 */
+const logState = { page:1, pageSize:10 };
+function filterStockLogs(){ logState.page=1; renderStockLogs(); }
 function renderStockLogs(){
   const kw = document.getElementById('logSearch').value.trim().toLowerCase();
   const type = document.getElementById('logType').value;
@@ -1439,8 +1499,12 @@ function renderStockLogs(){
     if(type && l.type!==type) return false;
     return true;
   });
-  document.getElementById('logTotal').textContent = list.length;
-  document.getElementById('logRows').innerHTML = list.map(l=>{
+  const total = list.length;
+  const pages = Math.max(1, Math.ceil(total/logState.pageSize));
+  if(logState.page>pages) logState.page=pages;
+  const start = (logState.page-1)*logState.pageSize;
+  const pageItems = list.slice(start, start+logState.pageSize);
+  document.getElementById('logRows').innerHTML = pageItems.map(l=>{
     const p = products.find(x=>x.id===l.prodId);
     const pn = p?p.name:'（已删除商品）';
     return `<tr>
@@ -1453,8 +1517,11 @@ function renderStockLogs(){
       <td style="color:var(--text-2)">${esc(l.note||'—')}</td>
     </tr>`;
   }).join('');
-  document.getElementById('logEmpty').style.display = list.length? 'none':'block';
+  document.getElementById('logEmpty').style.display = total? 'none':'block';
+  document.getElementById('logPageInfo').textContent = `共 ${total} 条流水，第 ${logState.page}/${pages} 页`;
+  renderPager('logPager', pages, logState.page, 'goLogPage');
 }
+function goLogPage(p){ logState.page=p; renderStockLogs(); }
 
 let stockModalPid = null;
 function openStockModal(pid, type){
@@ -1504,6 +1571,7 @@ function saveStock(){
   if(type==='in') sku.stock += qty; else sku.stock -= qty;
   stockLogs.unshift({ id:nextId('log'), prodId:pid, skuSpec:sku.spec, type, qty, time: now(), op:'演示账号', note:document.getElementById('stockNote').value.trim()||(type==='in'?'补货入库':'订单出库') });
   closeModal('stockModal');
+  logState.page=1;
   renderInventory(); renderDashboard(); renderStockLogs();
   toast(`「${p.name}」${type==='in'?'入库':'出库'} ${qty} 件成功`);
 }
@@ -1612,6 +1680,10 @@ function delCat(id){
 }
 
 /* ============================= 初始化 ============================= */
+// 渲染三个列表的「每页条数」选择器
+document.getElementById('listSizeBox').innerHTML = sizeSelHTML('listSize', listState.pageSize);
+document.getElementById('invSizeBox').innerHTML  = sizeSelHTML('invSize',  invState.pageSize);
+document.getElementById('logSizeBox').innerHTML  = sizeSelHTML('logSize',  logState.pageSize);
 renderDashboard();
 // 预填分类下拉供商品列表使用
 renderProducts();
